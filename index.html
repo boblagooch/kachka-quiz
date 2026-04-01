@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue:wght@400&family=Roboto+Condensed:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#0D1F16">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Kachka Quiz">
+  <title>Kachka Staff Quiz</title>
+  <style>
+    :root {
+      --kachka-red: #B83227;
+      --kachka-dark-red: #8C231A;
+      --kachka-gold: #D4A843;
+      --kachka-green: #1B3D28;
+      --kachka-dark: #0D1F16;
+      --kachka-darker: #070F0B;
+      --kachka-mid: #213B2C;
+      --text-light: #F0EAD6;
+      --text-muted: #94B8A0;
+      --glass-bg: rgba(255, 255, 255, 0.06);
+      --glass-border: rgba(212, 168, 67, 0.22);
+      --correct-green: #2E9E5B;
+      --incorrect-red: #B83227;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Roboto Condensed', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(160deg, var(--kachka-darker) 0%, var(--kachka-dark) 50%, #162B1E 100%);
+      color: var(--text-light);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── SPLASH ── */
+    .splash {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(160deg, var(--kachka-darker) 0%, var(--kachka-dark) 50%, #162B1E 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.8s ease;
+    }
+    .splash.fade-out { opacity: 0; pointer-events: none; }
+    .splash-inner {
+      text-align: center;
+      border: 2px solid var(--kachka-gold);
+      padding: 3rem 4rem;
+      position: relative;
+      animation: splashIn 0.8s ease;
+    }
+    .splash-inner::before, .splash-inner::after {
+      content: '';
+      position: absolute;
+      width: 16px; height: 16px;
+      border: 2px solid var(--kachka-red);
+    }
+    .splash-inner::before { top: -2px; left: -2px; border-right: none; border-bottom: none; }
+    .splash-inner::after  { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+    .splash-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3rem, 10vw, 5rem);
+      color: var(--kachka-gold);
+      letter-spacing: 6px;
+      line-height: 1;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+    }
+    .splash-sub {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 1rem;
+      color: var(--text-muted);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-top: 0.75rem;
+    }
+    @keyframes splashIn {
+      from { opacity: 0; transform: scale(0.92); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    /* ── MAIN WRAPPER ── */
+    .overlay {
+      min-height: 100vh;
+      padding: 2rem 1rem;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    #app {
+      width: 100%;
+      max-width: 600px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      backdrop-filter: blur(12px);
+      padding: 2.5rem 2rem;
+      margin-top: 1rem;
+    }
+
+    /* ── HEADER ── */
+    .quiz-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .quiz-label {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+    .quiz-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2rem, 6vw, 3rem);
+      color: var(--kachka-gold);
+      letter-spacing: 4px;
+      line-height: 1;
+      text-shadow: 1px 1px 6px rgba(0,0,0,0.6);
+    }
+    .quiz-version {
+      font-size: 0.85rem;
+      color: var(--kachka-red);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-top: 0.4rem;
+    }
+
+    /* ── SCREENS ── */
+    .screen { display: none; }
+    .screen.active { display: block; animation: fadeUp 0.4s ease; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── NAME SCREEN ── */
+    .name-prompt {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      color: var(--text-light);
+      letter-spacing: 2px;
+      margin-bottom: 0.5rem;
+    }
+    .name-sub {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      background: rgba(255,255,255,0.06);
+      border: 2px solid var(--glass-border);
+      border-radius: 8px;
+      color: var(--text-light);
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 1.1rem;
+      transition: border-color 0.3s;
+    }
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--kachka-gold);
+    }
+    input[type="text"]::placeholder { color: rgba(196,168,130,0.5); }
+
+    /* ── BUTTONS ── */
+    .btn-primary {
+      display: block;
+      width: 100%;
+      margin-top: 1.25rem;
+      padding: 1rem;
+      background: linear-gradient(135deg, var(--kachka-red), var(--kachka-dark-red));
+      border: none;
+      border-radius: 8px;
+      color: var(--text-light);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 3px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, #E74C3C, var(--kachka-red));
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(192,57,43,0.4);
+    }
+    .btn-primary:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .btn-next {
+      display: block;
+      width: 100%;
+      margin-top: 1.5rem;
+      padding: 0.9rem;
+      background: transparent;
+      border: 2px solid var(--kachka-gold);
+      border-radius: 8px;
+      color: var(--kachka-gold);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem;
+      letter-spacing: 3px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    .btn-next:hover {
+      background: var(--kachka-gold);
+      color: var(--kachka-dark);
+    }
+
+    /* ── PROGRESS BAR ── */
+    .progress-wrap {
+      margin-bottom: 1.75rem;
+    }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+    .progress-bar {
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--kachka-red), var(--kachka-gold));
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+
+    /* ── QUESTION ── */
+    .question-text {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: clamp(1.1rem, 3vw, 1.3rem);
+      font-weight: 700;
+      color: var(--text-light);
+      line-height: 1.4;
+      margin-bottom: 1.5rem;
+    }
+    .answers-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .answer-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      padding: 0.9rem 1rem;
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(212,168,67,0.2);
+      border-radius: 10px;
+      color: var(--text-light);
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 1rem;
+      font-weight: 400;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      width: 100%;
+    }
+    .answer-btn:hover:not(:disabled) {
+      border-color: var(--kachka-gold);
+      background: rgba(212,168,67,0.08);
+      transform: translateX(3px);
+    }
+    .answer-letter {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      color: var(--kachka-gold);
+      min-width: 22px;
+    }
+    .answer-btn.correct {
+      border-color: var(--correct-green);
+      background: rgba(39,174,96,0.15);
+    }
+    .answer-btn.incorrect {
+      border-color: var(--incorrect-red);
+      background: rgba(192,57,43,0.15);
+    }
+    .answer-btn.reveal {
+      border-color: var(--correct-green);
+      background: rgba(39,174,96,0.1);
+    }
+    .answer-btn:disabled { cursor: default; }
+
+    /* ── FEEDBACK ── */
+    .feedback-box {
+      margin-top: 1.25rem;
+      padding: 1.1rem;
+      border-radius: 10px;
+      border: 1px solid;
+      animation: fadeUp 0.3s ease;
+    }
+    .feedback-box.correct {
+      border-color: var(--correct-green);
+      background: rgba(39,174,96,0.1);
+    }
+    .feedback-box.incorrect {
+      border-color: var(--incorrect-red);
+      background: rgba(192,57,43,0.1);
+    }
+    .feedback-result {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 2px;
+      margin-bottom: 0.5rem;
+    }
+    .feedback-box.correct .feedback-result { color: var(--correct-green); }
+    .feedback-box.incorrect .feedback-result { color: var(--incorrect-red); }
+    .feedback-correction {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+      line-height: 1.4;
+    }
+    .fun-fact {
+      border-top: 1px solid rgba(212,168,67,0.2);
+      padding-top: 0.75rem;
+      font-size: 0.9rem;
+      color: var(--kachka-gold);
+      font-style: italic;
+      line-height: 1.5;
+    }
+    .fun-fact-label {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+      font-style: normal;
+    }
+
+    /* ── RESULTS ── */
+    .results-score {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .score-number {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 5rem;
+      color: var(--kachka-gold);
+      line-height: 1;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.6);
+    }
+    .score-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-top: 0.25rem;
+    }
+    .score-message {
+      font-family: 'Roboto Condensed', sans-serif;
+      font-size: 1.1rem;
+      color: var(--text-light);
+      margin-top: 0.75rem;
+      font-style: italic;
+    }
+    .results-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-top: 1.5rem;
+    }
+    .results-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      font-size: 0.9rem;
+      line-height: 1.4;
+      color: var(--text-muted);
+    }
+    .result-icon {
+      font-size: 1rem;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .result-q { font-weight: 700; color: var(--text-light); }
+    .result-answer { font-size: 0.85rem; }
+    .result-answer.wrong { color: var(--incorrect-red); }
+    .result-answer.right { color: var(--correct-green); }
+
+    /* ── NO QUIZ ── */
+    .no-quiz {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+    .no-quiz-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .no-quiz h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      color: var(--kachka-gold);
+      letter-spacing: 3px;
+      margin-bottom: 0.5rem;
+    }
+
+    /* ── LOADING ── */
+    .loading {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid rgba(212,168,67,0.2);
+      border-top: 3px solid var(--kachka-gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--glass-border), transparent);
+      margin: 2rem 0;
+    }
+
+    @media (max-width: 480px) {
+      #app { padding: 1.75rem 1.25rem; }
+      .splash-inner { padding: 2rem 2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Splash -->
+  <div class="splash" id="splash">
+    <div class="splash-inner">
+      <div class="splash-title">KACHKA</div>
+      <div class="splash-sub">Front of House Training</div>
+    </div>
+  </div>
+
+  <div class="overlay">
+    <div id="app">
+
+      <!-- Header (always visible) -->
+      <div class="quiz-header">
+        <div class="quiz-label">Front of House</div>
+        <div class="quiz-title">KACHKA</div>
+        <div class="quiz-version" id="quizVersionLabel">Wine & Vodka Knowledge</div>
+      </div>
+
+      <!-- Loading -->
+      <div class="screen active" id="screenLoading">
+        <div class="loading">
+          <div class="spinner"></div>
+          <p>Loading quiz...</p>
+        </div>
+      </div>
+
+      <!-- No active quiz -->
+      <div class="screen" id="screenNoQuiz">
+        <div class="no-quiz">
+          <div class="no-quiz-icon">🕐</div>
+          <h2>No Active Quiz</h2>
+          <p>Check back before your next service — a new quiz will be up soon.</p>
+        </div>
+      </div>
+
+      <!-- Name entry -->
+      <div class="screen" id="screenName">
+        <div class="name-prompt">Ready to test your knowledge?</div>
+        <p class="name-sub">Enter your name to begin.</p>
+        <input type="text" id="nameInput" placeholder="Your name" maxlength="40" autocomplete="off" />
+        <button class="btn-primary" id="startBtn" disabled>Start Quiz</button>
+      </div>
+
+      <!-- Question -->
+      <div class="screen" id="screenQuestion">
+        <div class="progress-wrap">
+          <div class="progress-label">
+            <span id="progressText">Question 1 of 7</span>
+            <span id="scoreText">0 correct</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="question-text" id="questionText"></div>
+        <div class="answers-grid" id="answersGrid"></div>
+        <div id="feedbackArea"></div>
+        <button class="btn-next" id="nextBtn" style="display:none"></button>
+      </div>
+
+      <!-- Results -->
+      <div class="screen" id="screenResults">
+        <div class="results-score">
+          <div class="score-number" id="finalScore"></div>
+          <div class="score-label" id="finalScoreLabel"></div>
+          <div class="score-message" id="scoreMessage"></div>
+        </div>
+        <div class="divider"></div>
+        <ul class="results-list" id="resultsList"></ul>
+        <p style="text-align:center; margin-top:1.5rem; color:var(--text-muted); font-size:0.85rem; font-style:italic;">
+          Thanks for taking the quiz. See you on the floor!
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.13.1/firebase-app-compat.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.13.1/firebase-firestore-compat.min.js"></script>
+
+  <script>
+    // ── FIREBASE CONFIG (same project as Hourly Log) ──
+    const firebaseConfig = {
+      apiKey: "AIzaSyAlHgOqWmanxs1a1cgjj5zfKJJRK0gxEDE",
+      authDomain: "the-hourly-log.firebaseapp.com",
+      projectId: "the-hourly-log",
+      storageBucket: "the-hourly-log.firebasestorage.app",
+      messagingSenderId: "634486351257",
+      appId: "1:634486351257:web:8d19c3a3e497c4ace7df08"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // ── STATE ──
+    let quiz = null;
+    let staffName = '';
+    let currentQ = 0;
+    let score = 0;
+    let answers = []; // { selected, correct, isCorrect }
+
+    // ── DOM ──
+    const $ = id => document.getElementById(id);
+    const screens = {
+      loading:  $('screenLoading'),
+      noQuiz:   $('screenNoQuiz'),
+      name:     $('screenName'),
+      question: $('screenQuestion'),
+      results:  $('screenResults'),
+    };
+
+    function showScreen(name) {
+      Object.values(screens).forEach(s => s.classList.remove('active'));
+      screens[name].classList.add('active');
+    }
+
+    // ── SPLASH ──
+    setTimeout(() => {
+      $('splash').classList.add('fade-out');
+      setTimeout(() => $('splash').style.display = 'none', 800);
+    }, 1800);
+
+    // ── LOAD ACTIVE QUIZ FROM FIRESTORE ──
+    async function loadQuiz() {
+      try {
+        const snap = await db.collection('kachka_quizzes')
+          .where('active', '==', true)
+          .limit(1)
+          .get();
+
+        if (snap.empty) {
+          showScreen('noQuiz');
+          return;
+        }
+
+        quiz = snap.docs[0].data();
+        quiz.id = snap.docs[0].id;
+
+        $('quizVersionLabel').textContent = quiz.title || 'Wine & Vodka Knowledge';
+        showScreen('name');
+
+      } catch (err) {
+        console.error('Error loading quiz:', err);
+        showScreen('noQuiz');
+      }
+    }
+
+    // ── NAME SCREEN ──
+    $('nameInput').addEventListener('input', function() {
+      $('startBtn').disabled = this.value.trim().length < 2;
+    });
+    $('nameInput').addEventListener('keypress', e => {
+      if (e.key === 'Enter' && !$('startBtn').disabled) startQuiz();
+    });
+    $('startBtn').addEventListener('click', startQuiz);
+
+    function startQuiz() {
+      staffName = $('nameInput').value.trim();
+      currentQ = 0;
+      score = 0;
+      answers = [];
+      showScreen('question');
+      renderQuestion();
+    }
+
+    // ── QUESTION SCREEN ──
+    function renderQuestion() {
+      const q = quiz.questions[currentQ];
+      const total = quiz.questions.length;
+      const pct = (currentQ / total) * 100;
+
+      $('progressText').textContent = `Question ${currentQ + 1} of ${total}`;
+      $('scoreText').textContent = `${score} correct`;
+      $('progressFill').style.width = pct + '%';
+      $('questionText').textContent = q.text;
+      $('feedbackArea').innerHTML = '';
+      $('nextBtn').style.display = 'none';
+
+      const letters = ['A', 'B', 'C', 'D'];
+      const grid = $('answersGrid');
+      grid.innerHTML = '';
+
+      q.answers.forEach((ans, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'answer-btn';
+        btn.innerHTML = `<span class="answer-letter">${letters[i]}</span><span>${ans}</span>`;
+        btn.addEventListener('click', () => selectAnswer(i));
+        if ('vibrate' in navigator) {
+          btn.addEventListener('click', () => navigator.vibrate(50));
+        }
+        grid.appendChild(btn);
+      });
+    }
+
+    function selectAnswer(selected) {
+      const q = quiz.questions[currentQ];
+      const correct = q.correct;
+      const isCorrect = selected === correct;
+      const letters = ['A', 'B', 'C', 'D'];
+
+      if (isCorrect) score++;
+
+      answers.push({ selected, correct, isCorrect, questionText: q.text, answers: q.answers });
+
+      // Disable all buttons and highlight
+      const btns = $('answersGrid').querySelectorAll('.answer-btn');
+      btns.forEach((btn, i) => {
+        btn.disabled = true;
+        if (i === correct) btn.classList.add(isCorrect ? 'correct' : 'reveal');
+        if (i === selected && !isCorrect) btn.classList.add('incorrect');
+      });
+
+      // Show feedback
+      const isLast = currentQ === quiz.questions.length - 1;
+      const fb = document.createElement('div');
+      fb.className = `feedback-box ${isCorrect ? 'correct' : 'incorrect'}`;
+      fb.innerHTML = `
+        <div class="feedback-result">${isCorrect ? '✓ Correct!' : '✗ Not quite'}</div>
+        ${!isCorrect ? `<div class="feedback-correction">The correct answer is <strong>${letters[correct]}) ${q.answers[correct]}</strong></div>` : ''}
+        ${q.funFact ? `
+          <div class="fun-fact">
+            <div class="fun-fact-label">Did you know</div>
+            ${q.funFact}
+          </div>` : ''}
+      `;
+      $('feedbackArea').appendChild(fb);
+
+      // Next / Finish button
+      const nextBtn = $('nextBtn');
+      nextBtn.style.display = 'block';
+      nextBtn.textContent = isLast ? 'See My Results' : 'Next Question';
+      nextBtn.onclick = isLast ? showResults : () => {
+        currentQ++;
+        $('progressText').textContent = `Question ${currentQ + 1} of ${quiz.questions.length}`;
+        renderQuestion();
+      };
+    }
+
+    // ── RESULTS ──
+    async function showResults() {
+      const total = quiz.questions.length;
+      const pct = Math.round((score / total) * 100);
+
+      $('finalScore').textContent = `${score}/${total}`;
+      $('finalScoreLabel').textContent = `${pct}% correct`;
+
+      const messages = [
+        [0, 40,  'Keep studying — you\'ll get there!'],
+        [40, 60, 'Good effort. A little more review and you\'ll nail it.'],
+        [60, 80, 'Solid work. You know your stuff.'],
+        [80, 99, 'Great job — the guests are in good hands.'],
+        [100, 100, 'Perfect score. You\'re a Kachka encyclopedia.'],
+      ];
+      $('scoreMessage').textContent = messages.find(([lo, hi]) => pct >= lo && pct <= hi)?.[2] || '';
+
+      // Build results list
+      const list = $('resultsList');
+      list.innerHTML = '';
+      const letters = ['A', 'B', 'C', 'D'];
+      answers.forEach((a, i) => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <span class="result-icon">${a.isCorrect ? '✅' : '❌'}</span>
+          <div>
+            <div class="result-q">Q${i + 1}: ${a.questionText}</div>
+            <div class="result-answer ${a.isCorrect ? 'right' : 'wrong'}">
+              Your answer: ${letters[a.selected]}) ${a.answers[a.selected]}
+              ${!a.isCorrect ? `<br>Correct: ${letters[a.correct]}) ${a.answers[a.correct]}` : ''}
+            </div>
+          </div>
+        `;
+        list.appendChild(li);
+      });
+
+      showScreen('results');
+
+      // Save to Firestore
+      try {
+        await db.collection('kachka_quiz_submissions').add({
+          name: staffName,
+          quizId: quiz.id,
+          quizVersion: quiz.version || 0,
+          quizTitle: quiz.title || '',
+          score,
+          total,
+          pct,
+          answers: answers.map(a => ({
+            selected: a.selected,
+            correct: a.correct,
+            isCorrect: a.isCorrect
+          })),
+          timestamp: new Date().toISOString()
+        });
+      } catch (err) {
+        console.error('Failed to save submission:', err);
+      }
+    }
+
+    // ── INIT ──
+    loadQuiz();
+  </script>
+</body>
+</html>
