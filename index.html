@@ -679,7 +679,7 @@
       const nextBtn = $('nextBtn');
       nextBtn.style.display = 'block';
       nextBtn.textContent = isLast ? 'See My Results' : 'Next Question';
-      setTimeout(() => nextBtn.scrollIntoView({ behavior: 'smooth', block: 'end' }), 50);
+      setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 50);
       nextBtn.onclick = isLast ? showResults : () => {
         currentQ++;
         $('progressText').textContent = `Question ${currentQ + 1} of ${quiz.questions.length}`;
