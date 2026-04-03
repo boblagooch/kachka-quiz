@@ -197,10 +197,14 @@
     }
     .btn-next {
       display: block;
-      width: 100%;
-      margin-top: 1.5rem;
+      width: calc(100% - 3rem);
+      max-width: 540px;
+      position: fixed;
+      bottom: 1.2rem;
+      left: 50%;
+      transform: translateX(-50%);
       padding: 0.9rem;
-      background: transparent;
+      background: var(--kachka-dark);
       border: 2px solid var(--kachka-gold);
       border-radius: 8px;
       color: var(--kachka-gold);
@@ -209,6 +213,7 @@
       letter-spacing: 3px;
       cursor: pointer;
       transition: all 0.25s ease;
+      z-index: 100;
     }
     .btn-next:hover {
       background: var(--kachka-gold);
