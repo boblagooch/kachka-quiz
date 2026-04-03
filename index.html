@@ -197,14 +197,10 @@
     }
     .btn-next {
       display: block;
-      width: calc(100% - 3rem);
-      max-width: 540px;
-      position: fixed;
-      bottom: 1.2rem;
-      left: 50%;
-      transform: translateX(-50%);
+      width: 100%;
+      margin-top: 1.5rem;
       padding: 0.9rem;
-      background: var(--kachka-dark);
+      background: transparent;
       border: 2px solid var(--kachka-gold);
       border-radius: 8px;
       color: var(--kachka-gold);
@@ -213,7 +209,6 @@
       letter-spacing: 3px;
       cursor: pointer;
       transition: all 0.25s ease;
-      z-index: 100;
     }
     .btn-next:hover {
       background: var(--kachka-gold);
@@ -679,12 +674,12 @@
           </div>` : ''}
       `;
       $('feedbackArea').appendChild(fb);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
 
       // Next / Finish button
       const nextBtn = $('nextBtn');
       nextBtn.style.display = 'block';
       nextBtn.textContent = isLast ? 'See My Results' : 'Next Question';
+      setTimeout(() => nextBtn.scrollIntoView({ behavior: 'smooth', block: 'end' }), 50);
       nextBtn.onclick = isLast ? showResults : () => {
         currentQ++;
         $('progressText').textContent = `Question ${currentQ + 1} of ${quiz.questions.length}`;
